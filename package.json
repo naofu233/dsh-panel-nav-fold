@@ -1,0 +1,56 @@
+{
+  "name": "dsh-panel-nav-fold",
+  "version": "1.0.0",
+  "description": "Adds a collapsible \"Panel Navigation\" header to the DeepSeek Harness sidebar: collapse the global panel rows and plugin sidebar entries, click again to expand.",
+  "type": "module",
+  "license": "MIT",
+  "author": "naofu233",
+  "homepage": "https://github.com/naofu233/dsh-panel-nav-fold#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/naofu233/dsh-panel-nav-fold.git"
+  },
+  "bugs": {
+    "url": "https://github.com/naofu233/dsh-panel-nav-fold/issues"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "README.zh.md",
+    "LICENSE",
+    "screenshots.json",
+    "assets"
+  ],
+  "icon": "./icon.svg",
+  "keywords": [
+    "dsh-plugin",
+    "dsh",
+    "deepseek-harness",
+    "sidebar",
+    "panel",
+    "fold",
+    "navigation"
+  ],
+  "engines": {
+    "dsh": "^0.2.2-rc.2"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true
+    }
+  }
+}

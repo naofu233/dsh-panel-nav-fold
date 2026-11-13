@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Panel navigation fold",
+    "description": "Add a collapsible “Panel Navigation” header to the sidebar. It folds the global panel rows and plugin sidebar entries by default; click to expand them in place."
+  }
+}
