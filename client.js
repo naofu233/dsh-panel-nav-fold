@@ -45,9 +45,10 @@ window.__ModuleLoader__.load({
      * Older shells mounted those entries between New Session and
      * scrollRegion; since the 2026-11 shell update they are appended AFTER
      * footArea, at the very bottom of the sidebar. The toggle therefore
-     * belongs in `root` right before the first entry, and entries that sit
-     * below scrollRegion are lifted back above it so the whole group
-     * (toggle, entries, native panel rows) stays together under New Session.
+     * belongs in `root` right before the first entry (or before scrollRegion
+     * when entries sit below it), and CSS `order` keeps the whole group
+     * (toggle, entries, native panel rows) together under New Session
+     * without relocating nodes owned by other plugins.
      * Mounting the toggle inside the scrollArea (as an earlier build did)
      * lets CSS grid auto-placement drop it into the 4px leading gutter,
      * which renders it as a narrow icon overlapping the first panel rows.
@@ -57,7 +58,17 @@ window.__ModuleLoader__.load({
       'margin:0 0 2px;padding:5px 12px;border:none;border-radius:var(--dsw-radius-md);',
       'background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;',
       'font:inherit;font-size:13px;font-weight:600;line-height:22px;text-align:left;',
-      'box-sizing:border-box;flex:none;user-select:none}',
+      'box-sizing:border-box;flex:none;user-select:none;order:1}',
+      /*
+       * Visual grouping without touching other plugins' nodes: the shell root
+       * is a flex column, so `order` lifts plugin entries (mounted after
+       * footArea by the new shell) next to the toggle, ahead of the scroll
+       * region and foot. Ties inside order:1 resolve by document order, and
+       * the toggle is always inserted before the entries or the scroll region.
+       */
+      '[class*="_root"] > [data-dsh-part="sidebar-entry"]{order:1}',
+      '[class*="_root"] > [class*="_scrollRegion"]{order:2}',
+      '[class*="_root"] > [class*="_footArea"]{order:3}',
       '.dshpf-nav:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
       '.dshpf-nav:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:-2px}',
       '.dshpf-nav-icon{display:inline-flex;flex:none;margin-left:auto;opacity:.8}',
@@ -143,26 +154,23 @@ window.__ModuleLoader__.load({
     }
 
     /**
-     * Keep the panel navigation group contiguous above the scroll region:
-     * entries mounted after scrollRegion (new shell) are lifted above it in
-     * their existing relative order, then the toggle is placed before the
-     * first entry (or before scrollRegion when no plugin entry exists).
+     * Place the toggle inside the panel navigation group without moving any
+     * node owned by another plugin. Entries keep their DOM position (the new
+     * shell mounts them after footArea); CSS `order` on the flex-column root
+     * lifts them visually next to the toggle. An earlier build moved entry
+     * nodes here, which fought dsh-skill-market's own self-healing
+     * insertBefore and made it throw NotFoundError on every retry — so only
+     * our own button is ever inserted.
      */
-    function placeGroup(root, scrollRegion, button) {
-      const entries = findEntries(root);
-      for (const entry of entries) {
-        if (scrollRegion.compareDocumentPosition(entry) & Node.DOCUMENT_POSITION_FOLLOWING) {
-          root.insertBefore(entry, scrollRegion);
-        }
-      }
-      const anchor = entries[0] ?? scrollRegion;
+    function placeToggle(root, scrollRegion, button) {
+      const first = findEntries(root)[0];
+      const anchor =
+        first !== undefined &&
+        (first.compareDocumentPosition(scrollRegion) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+          ? first
+          : scrollRegion;
       if (button.parentElement !== root || button.nextElementSibling !== anchor) {
         root.insertBefore(button, anchor);
-      }
-      for (let i = 1; i < entries.length; i++) {
-        if (entries[i].previousElementSibling !== entries[i - 1]) {
-          root.insertBefore(entries[i], entries[i - 1].nextElementSibling);
-        }
       }
     }
 
@@ -204,7 +212,7 @@ window.__ModuleLoader__.load({
         if (disposed) return;
         const shell = findShell();
         if (shell === null) return;
-        placeGroup(shell.root, shell.scrollRegion, button);
+        placeToggle(shell.root, shell.scrollRegion, button);
       };
 
       ensure();

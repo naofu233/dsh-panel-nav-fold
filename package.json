@@ -1,6 +1,6 @@
 {
   "name": "dsh-panel-nav-fold",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Adds a collapsible \"Panel Navigation\" header to the DeepSeek Harness sidebar: collapse the global panel rows and plugin sidebar entries, click again to expand.",
   "type": "module",
   "license": "MIT",
