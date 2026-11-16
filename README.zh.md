@@ -37,7 +37,7 @@ dsh plugin --profile <profile> add github:naofu233/dsh-panel-nav-fold
 
 ## 兼容性
 
-- 在 Windows 的 DeepSeek Harness `0.2.2-rc.2` 上测试过，Tauri 桌面端和 Web UI 都验证过。
+- 在 Windows 的 DeepSeek Harness `0.2.2-rc.2` 与 `0.2.2-rc.3`（2026-11 外壳更新）上测试过，Tauri 桌面端和 Web UI 都验证过。
 - `package.json` 声明 `engines.dsh: ^0.2.2-rc.2`。
 - 这是 DOM/CSS 层的视觉增强，不是官方 shell 扩展点。它读取当前侧边栏结构（`nav[aria-label="全局面板"]`、`[data-dsh-part="sidebar-entry"]`，以及 shell 的 `_panelList` / `_scrollArea` 模块类）。未来 shell 改结构可能导致位置或折叠失效；标题行本身仍在，插件可以安全禁用。
 - 不修改宿主文件，也不修改其他插件。

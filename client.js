@@ -28,25 +28,29 @@ window.__ModuleLoader__.load({
     ].join('');
 
     /*
-     * Layout contract of the current shell (dsh-client-ui-sidebar SidebarRoot):
+     * Layout contract of the shell (dsh-client-ui-sidebar SidebarRoot):
      *
      *   div.root (flex column)
      *     div.logoRow
-     *     button.newSession
-     *     button[data-dsh-part="sidebar-entry"]  (injected by other plugins)
+     *     div.newSessionRow > button.newSession
      *     div.scrollRegion
      *       div.scrollArea (CSS grid: 4px | 1fr | 6px)
      *         nav.panelList (grid-row 2, grid-column 2)
      *         div.regionArea (workspaces, grid-row 4, grid-column 2)
      *     div.footArea
+     *     button[data-dsh-part="sidebar-entry"]  (injected by other plugins)
      *
      * The panel rows are NOT the only member of the panel navigation group:
-     * plugins insert their own entry buttons as direct children of `root`,
-     * between New Session and scrollRegion. The toggle therefore belongs in
-     * `root` as well, right before the first entry — mounting it inside the
-     * scrollArea (as an earlier build did) lets CSS grid auto-placement drop
-     * it into the 4px leading gutter, which renders it as a narrow icon that
-     * overlaps the first panel rows.
+     * plugins insert their own entry buttons as direct children of `root`.
+     * Older shells mounted those entries between New Session and
+     * scrollRegion; since the 2026-11 shell update they are appended AFTER
+     * footArea, at the very bottom of the sidebar. The toggle therefore
+     * belongs in `root` right before the first entry, and entries that sit
+     * below scrollRegion are lifted back above it so the whole group
+     * (toggle, entries, native panel rows) stays together under New Session.
+     * Mounting the toggle inside the scrollArea (as an earlier build did)
+     * lets CSS grid auto-placement drop it into the 4px leading gutter,
+     * which renders it as a narrow icon overlapping the first panel rows.
      */
     const CSS = [
       '.dshpf-nav{display:flex;align-items:center;gap:6px;width:100%;min-height:32px;',
@@ -129,15 +133,37 @@ window.__ModuleLoader__.load({
       return { root, scrollRegion };
     }
 
-    /**
-     * The first plugin sidebar entry direct child of the shell root, else the
-     * scroll region. The toggle is inserted before it.
-     */
-    function findAnchor(root, scrollRegion) {
+    /** Plugin sidebar entries that are direct children of the shell root, in DOM order. */
+    function findEntries(root) {
+      const entries = [];
       for (const child of root.children) {
-        if (child.getAttribute('data-dsh-part') === 'sidebar-entry') return child;
+        if (child.getAttribute('data-dsh-part') === 'sidebar-entry') entries.push(child);
       }
-      return scrollRegion;
+      return entries;
+    }
+
+    /**
+     * Keep the panel navigation group contiguous above the scroll region:
+     * entries mounted after scrollRegion (new shell) are lifted above it in
+     * their existing relative order, then the toggle is placed before the
+     * first entry (or before scrollRegion when no plugin entry exists).
+     */
+    function placeGroup(root, scrollRegion, button) {
+      const entries = findEntries(root);
+      for (const entry of entries) {
+        if (scrollRegion.compareDocumentPosition(entry) & Node.DOCUMENT_POSITION_FOLLOWING) {
+          root.insertBefore(entry, scrollRegion);
+        }
+      }
+      const anchor = entries[0] ?? scrollRegion;
+      if (button.parentElement !== root || button.nextElementSibling !== anchor) {
+        root.insertBefore(button, anchor);
+      }
+      for (let i = 1; i < entries.length; i++) {
+        if (entries[i].previousElementSibling !== entries[i - 1]) {
+          root.insertBefore(entries[i], entries[i - 1].nextElementSibling);
+        }
+      }
     }
 
     function mountToggle(ctx) {
@@ -178,10 +204,7 @@ window.__ModuleLoader__.load({
         if (disposed) return;
         const shell = findShell();
         if (shell === null) return;
-        const anchor = findAnchor(shell.root, shell.scrollRegion);
-        if (button.parentElement !== shell.root || button.nextElementSibling !== anchor) {
-          shell.root.insertBefore(button, anchor);
-        }
+        placeGroup(shell.root, shell.scrollRegion, button);
       };
 
       ensure();

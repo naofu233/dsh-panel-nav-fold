@@ -37,7 +37,7 @@ For local development, use **Plugins → Add plugin** and choose this directory.
 
 ## Compatibility
 
-- Tested with DeepSeek Harness `0.2.2-rc.2` on Windows, in both the Tauri desktop app and the web UI.
+- Tested with DeepSeek Harness `0.2.2-rc.2` and `0.2.2-rc.3` (2026-11 shell update) on Windows, in both the Tauri desktop app and the web UI.
 - `package.json` declares `engines.dsh: ^0.2.2-rc.2`.
 - This is a DOM/CSS-level enhancement, not an official shell extension point. It reads the current sidebar structure (`nav[aria-label="全局面板"]`, `[data-dsh-part="sidebar-entry"]`, and the shell's `_panelList` / `_scrollArea` module classes). A future shell change can break placement or folding; the row itself stays visible and the plugin can be disabled safely.
 - It does not modify host files or other plugins.
